@@ -10,8 +10,74 @@ from dotenv import load_dotenv
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# -------------------------------------------------
+# Streamlit Page Config
+# -------------------------------------------------
 st.set_page_config(page_title="Know Your Home", page_icon="🏡", layout="centered")
 
+# -------------------------------------------------
+# Custom CSS for Card-style UI
+# -------------------------------------------------
+st.markdown("""
+    <style>
+    .kyh-main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding-top: 1rem;
+    }
+    .kyh-card {
+        background-color: #FFFFFF;
+        border-radius: 18px;
+        padding: 1.5rem 1.75rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(142,124,195,0.12);
+    }
+    .kyh-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #4A3B91;
+        margin-bottom: 0.25rem;
+    }
+    .kyh-subtitle {
+        font-size: 0.95rem;
+        color: #555;
+        margin-bottom: 0.5rem;
+    }
+    .kyh-step-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #8E7CC3;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .kyh-section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: #4A3B91;
+    }
+    .kyh-divider {
+        height: 1px;
+        background: linear-gradient(to right, rgba(142,124,195,0.5), transparent);
+        margin: 0.75rem 0 1rem 0;
+    }
+    .kyh-report {
+        border-left: 4px solid #8E7CC3;
+        padding-left: 1rem;
+    }
+    .stButton>button {
+        border-radius: 999px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 600;
+        border: none;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Wrap whole app in a centered container
+st.markdown('<div class="kyh-main">', unsafe_allow_html=True)
 
 # -------------------------------------------------
 # Area + Cost Calculation Logic
@@ -126,50 +192,80 @@ def compute_areas(bhk: str, plot_size: float, workspace: str, rental: str, answe
         "cost_high": cost_high,
     }
 
-
 # -------------------------------------------------
 # Welcome Screen
 # -------------------------------------------------
-st.title("🏡 Know Your Home")
 st.markdown("""
-### Discover what kind of home truly fits your life.
-Before you begin building, let’s take a pause to understand how you actually live.  
-Your answers will help us prepare a personalised report that connects **your lifestyle, space, and budget** — so you start your home journey with clarity and confidence.
-""")
+<div class="kyh-card">
+  <div class="kyh-step-label">Pocket Home · Pre-Design Clarity</div>
+  <div class="kyh-title">🏡 Know Your Home</div>
+  <div class="kyh-subtitle">
+    Before you start drawing plans or talking to contractors, let’s first understand how you actually live.
+    Your answers will help you see what kind of home truly fits your lifestyle, plot and budget.
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 if "started" not in st.session_state:
     st.session_state.started = False
 if not st.session_state.started:
-    if st.button("✨ Begin My Home Journey"):
+    with st.container():
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown(
+                '<div class="kyh-card"><b>Ready?</b><br/>This will take just a few minutes and give you a clear, shareable brief for your future home.</div>',
+                unsafe_allow_html=True
+            )
+            start = st.button("✨ Begin My Home Journey")
+        # col2 left empty for balance
+    if start:
         st.session_state.started = True
-    st.stop()
+    else:
+        st.stop()
 
 # -------------------------------------------------
-# User Info
+# User Info (Step 1)
 # -------------------------------------------------
-st.header("🧾 Step 1: Basic Information")
+st.markdown("""
+<div class="kyh-card">
+  <div class="kyh-step-label">Step 1</div>
+  <div class="kyh-section-title">Basic Information</div>
+""", unsafe_allow_html=True)
 
 name = st.text_input("Your Name")
 email = st.text_input("Email")
-own_plot = st.radio("Do you already own a plot?", ["Yes", "No"])
+own_plot = st.radio("Do you already own a plot?", ["Yes", "No"], horizontal=True)
 
 if own_plot == "Yes":
     plot_size = st.number_input("Enter your plot size (sq.ft)", 500, 5000, 1200)
 else:
     plot_size = st.number_input("Ideal plot size you are considering (sq.ft)", 500, 5000, 1200)
 
-budget = st.number_input("Your Estimated Construction Budget (₹)", 0, 20000000, 3500000)
-family_members = st.number_input("Family Members", 1, 10, 3)
-bhk = st.radio("How many bedrooms are you planning for?", ["2 BHK", "3 BHK", "4 BHK"])
-workspace = st.radio("Would you like a workspace or walk-in wardrobe in any bedroom?", ["Yes", "No"])
-rental = st.radio("Would you like to include a rental/commercial portion?", ["Yes", "No"])
+col_b1, col_b2 = st.columns(2)
+with col_b1:
+    budget = st.number_input("Your Estimated Construction Budget (₹)", 0, 20000000, 3500000)
+with col_b2:
+    family_members = st.number_input("Family Members", 1, 10, 3)
 
-st.markdown("---")
+col_b3, col_b4 = st.columns(2)
+with col_b3:
+    bhk = st.radio("How many bedrooms are you planning for?", ["2 BHK", "3 BHK", "4 BHK"], horizontal=True)
+with col_b4:
+    workspace = st.radio("Workspace / Walk-in in bedroom?", ["Yes", "No"], horizontal=True)
+
+rental = st.radio("Include a rental / studio portion?", ["Yes", "No"], horizontal=True)
+
+st.markdown("</div>", unsafe_allow_html=True)  # close Step 1 card
 
 # -------------------------------------------------
-# Lifestyle Questions (21)
+# Lifestyle Questions (Step 2 - 21 Questions)
 # -------------------------------------------------
-st.header("🌿 Step 2: Lifestyle & Design Preferences")
+st.markdown("""
+<div class="kyh-card">
+  <div class="kyh-step-label">Step 2</div>
+  <div class="kyh-section-title">Lifestyle & Design Preferences</div>
+  <div class="kyh-divider"></div>
+""", unsafe_allow_html=True)
 
 answers = {}
 
@@ -225,12 +321,14 @@ answers["Q20"] = st.radio("How would you describe your social energy?",
 answers["Q21"] = st.text_input("If you had to describe your dream home in one word, what would it be?",
     placeholder="Peace, Warmth, Freedom...")
 
-st.markdown("---")
+st.markdown("</div>", unsafe_allow_html=True)  # close Step 2 card
 
 # -------------------------------------------------
 # Generate Report
 # -------------------------------------------------
-if st.button("🏗️ Generate My Home Report"):
+generate = st.button("🏗️ Generate My Home Report")
+
+if generate:
     st.info("Building your personalised home report... please wait ⏳")
 
     # Compute areas + cost deterministically
@@ -315,7 +413,16 @@ if st.button("🏗️ Generate My Home Report"):
         )
         report = response.choices[0].message.content
         st.success("✅ Your report is ready!")
-        st.markdown("## 🏡 Your Personalised Home Report")
+
+        st.markdown("""
+        <div class="kyh-card kyh-report">
+          <div class="kyh-section-title">Your Personalised Home Report</div>
+        """, unsafe_allow_html=True)
         st.markdown(report)
+        st.markdown("</div>", unsafe_allow_html=True)
+
     except Exception as e:
         st.error(f"Error: {e}")
+
+# Close main container
+st.markdown('</div>', unsafe_allow_html=True)
